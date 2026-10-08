@@ -504,8 +504,21 @@
           <textarea id="annContentInput" rows="4" placeholder="Write full announcement details..." required></textarea>
         </div>
         <div class="form-group">
-          <label for="annAttachmentInput">Attachment File Name (Optional)</label>
-          <input type="text" id="annAttachmentInput" placeholder="e.g. Schedule_Review_2026.pdf">
+          <label>Attach File / Document (Optional)</label>
+          <div class="file-picker-container" style="background:var(--bg-input); border:1px dashed var(--border-subtle); padding:12px; border-radius:var(--radius-md); text-align:center;">
+            <input type="file" id="annFileInput" style="display:none;" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('annFileInput').click()" style="margin:0 auto; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Choose File from Device
+            </button>
+            <div id="annSelectedFilePreview" style="display:none; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; margin-top:8px;">
+              <span id="annSelectedFileName" style="font-weight:600; color:var(--accent-secondary);"></span>
+              <button type="button" id="annRemoveFileBtn" style="background:none; border:none; color:var(--status-urgent); cursor:pointer; font-weight:700; padding:2px 6px;" title="Remove file">✕</button>
+            </div>
+            <input type="hidden" id="annAttachmentInput">
+            <input type="hidden" id="annAttachmentDataUrl">
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Supports PDF, Word, Images, Zip, or Code files</div>
+          </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <input type="checkbox" id="annIsPinnedInput" style="width:auto;">
@@ -590,6 +603,21 @@
           <label for="resDescInput">Description</label>
           <textarea id="resDescInput" rows="2" placeholder="Summary of topics covered..."></textarea>
         </div>
+        <div class="form-group">
+          <label>Select Document File</label>
+          <div class="file-picker-container" style="background:var(--bg-input); border:1px dashed var(--border-subtle); padding:12px; border-radius:var(--radius-md); text-align:center;">
+            <input type="file" id="resFileInput" style="display:none;" accept=".pdf,.doc,.docx,.zip,.pptx,.txt">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('resFileInput').click()" style="margin:0 auto; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Choose Resource File
+            </button>
+            <div id="resSelectedFilePreview" style="display:none; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; margin-top:8px;">
+              <span id="resSelectedFileName" style="font-weight:600; color:var(--accent-secondary);"></span>
+              <button type="button" id="resRemoveFileBtn" style="background:none; border:none; color:var(--status-urgent); cursor:pointer; font-weight:700; padding:2px 6px;" title="Remove file">✕</button>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Auto-detects document format & file size</div>
+          </div>
+        </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <div class="form-group">
             <label for="resFileTypeInput">File Type</label>
@@ -628,8 +656,19 @@
           <textarea id="subCommentInput" rows="3" placeholder="Explain your implementation or write repository URL..."></textarea>
         </div>
         <div class="form-group">
-          <label for="subFileNameInput">File / Source Code Name</label>
-          <input type="text" id="subFileNameInput" placeholder="e.g. student_solution.zip or main.cpp" required>
+          <label>Upload Assignment File / Code</label>
+          <div class="file-picker-container" style="background:var(--bg-input); border:1px dashed var(--border-subtle); padding:12px; border-radius:var(--radius-md); text-align:center;">
+            <input type="file" id="subFileInput" style="display:none;" accept="*">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('subFileInput').click()" style="margin:0 auto; display:inline-flex; align-items:center; gap:6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Choose Solution File from Device
+            </button>
+            <div id="subSelectedFilePreview" style="display:none; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; margin-top:8px;">
+              <span id="subSelectedFileName" style="font-weight:600; color:var(--accent-secondary);"></span>
+              <button type="button" id="subRemoveFileBtn" style="background:none; border:none; color:var(--status-urgent); cursor:pointer; font-weight:700; padding:2px 6px;" title="Remove file">✕</button>
+            </div>
+            <input type="text" id="subFileNameInput" placeholder="or enter file / repo name manually..." style="margin-top:10px;" required>
+          </div>
         </div>
       </div>
       <div class="modal-footer">

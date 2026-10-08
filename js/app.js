@@ -429,6 +429,121 @@
     elements.chatMessageInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") handleSendMessage();
     });
+
+    // Device file uploads setup
+    setupFileUploadHandlers();
+  }
+
+  // --- FILE UPLOAD LOGIC ---
+  function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return "0 B";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / 1048576).toFixed(1) + " MB";
+  }
+
+  function setupFileUploadHandlers() {
+    // 1. Announcement file picker
+    const annFileInput = document.getElementById("annFileInput");
+    const annPreview = document.getElementById("annSelectedFilePreview");
+    const annNameSpan = document.getElementById("annSelectedFileName");
+    const annRemoveBtn = document.getElementById("annRemoveFileBtn");
+    const annHiddenInput = document.getElementById("annAttachmentInput");
+    const annDataUrlInput = document.getElementById("annAttachmentDataUrl");
+
+    if (annFileInput) {
+      annFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          annNameSpan.textContent = `${file.name} (${formatBytes(file.size)})`;
+          annPreview.style.display = "flex";
+          annHiddenInput.value = file.name;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            if (annDataUrlInput) annDataUrlInput.value = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+          showToast(`File attached: ${file.name}`, "info");
+        }
+      });
+    }
+
+    if (annRemoveBtn) {
+      annRemoveBtn.addEventListener("click", () => {
+        if (annFileInput) annFileInput.value = "";
+        if (annHiddenInput) annHiddenInput.value = "";
+        if (annDataUrlInput) annDataUrlInput.value = "";
+        if (annPreview) annPreview.style.display = "none";
+      });
+    }
+
+    // 2. Resource file picker
+    const resFileInput = document.getElementById("resFileInput");
+    const resPreview = document.getElementById("resSelectedFilePreview");
+    const resNameSpan = document.getElementById("resSelectedFileName");
+    const resRemoveBtn = document.getElementById("resRemoveFileBtn");
+
+    if (resFileInput) {
+      resFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          resNameSpan.textContent = `${file.name} (${formatBytes(file.size)})`;
+          resPreview.style.display = "flex";
+
+          // Auto-fill title if empty
+          const titleInput = document.getElementById("resTitleInput");
+          if (titleInput && !titleInput.value) {
+            titleInput.value = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+          }
+
+          // Auto-detect file size
+          const sizeInput = document.getElementById("resFileSizeInput");
+          if (sizeInput) sizeInput.value = formatBytes(file.size);
+
+          // Auto-detect file type
+          const typeSelect = document.getElementById("resFileTypeInput");
+          const ext = file.name.split(".").pop().toUpperCase();
+          if (typeSelect && ["PDF", "ZIP", "PPTX", "DOCX"].includes(ext)) {
+            typeSelect.value = ext;
+          }
+          showToast(`Resource selected: ${file.name}`, "info");
+        }
+      });
+    }
+
+    if (resRemoveBtn) {
+      resRemoveBtn.addEventListener("click", () => {
+        if (resFileInput) resFileInput.value = "";
+        if (resPreview) resPreview.style.display = "none";
+      });
+    }
+
+    // 3. Assignment submission file picker
+    const subFileInput = document.getElementById("subFileInput");
+    const subPreview = document.getElementById("subSelectedFilePreview");
+    const subNameSpan = document.getElementById("subSelectedFileName");
+    const subRemoveBtn = document.getElementById("subRemoveFileBtn");
+    const subFileNameInput = document.getElementById("subFileNameInput");
+
+    if (subFileInput) {
+      subFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          subNameSpan.textContent = `${file.name} (${formatBytes(file.size)})`;
+          subPreview.style.display = "flex";
+          if (subFileNameInput) subFileNameInput.value = file.name;
+          showToast(`File selected: ${file.name}`, "info");
+        }
+      });
+    }
+
+    if (subRemoveBtn) {
+      subRemoveBtn.addEventListener("click", () => {
+        if (subFileInput) subFileInput.value = "";
+        if (subFileNameInput) subFileNameInput.value = "";
+        if (subPreview) subPreview.style.display = "none";
+      });
+    }
   }
 
   // --- NAVIGATION TAB SWITCHER ---
@@ -560,7 +675,7 @@
         <p class="ann-content">${escapeHTML(ann.content)}</p>
 
         ${ann.attachment_name ? `
-          <a href="#" class="ann-attachment" onclick="window.downloadAttachment('${escapeHTML(ann.attachment_name)}'); return false;">
+          <a href="#" class="ann-attachment" onclick="window.downloadAttachment('${escapeHTML(ann.attachment_name)}', '${escapeHTML(ann.attachment_url || '')}'); return false;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
             ${escapeHTML(ann.attachment_name)}
           </a>
@@ -600,6 +715,7 @@
     const category = document.getElementById("annCategorySelect").value;
     const content = document.getElementById("annContentInput").value.trim();
     const attachment = document.getElementById("annAttachmentInput").value.trim();
+    const attachmentDataUrl = document.getElementById("annAttachmentDataUrl") ? document.getElementById("annAttachmentDataUrl").value : "";
     const isPinned = document.getElementById("annIsPinnedInput").checked;
 
     if (!title || !content) {
@@ -614,7 +730,7 @@
       category,
       content,
       attachment_name: attachment || null,
-      attachment_url: attachment ? "#" : null,
+      attachment_url: attachmentDataUrl || (attachment ? "#" : null),
       is_pinned: isPinned,
       author_id: currentUser.id,
       author_name: currentUser.name,
@@ -628,6 +744,12 @@
     document.getElementById("annTitleInput").value = "";
     document.getElementById("annContentInput").value = "";
     document.getElementById("annAttachmentInput").value = "";
+    const dataUrlInput = document.getElementById("annAttachmentDataUrl");
+    if (dataUrlInput) dataUrlInput.value = "";
+    const fileInput = document.getElementById("annFileInput");
+    if (fileInput) fileInput.value = "";
+    const filePreview = document.getElementById("annSelectedFilePreview");
+    if (filePreview) filePreview.style.display = "none";
     document.getElementById("annIsPinnedInput").checked = false;
 
     showToast("Announcement broadcasted successfully!", "success");
@@ -1038,8 +1160,26 @@
     }, 1200);
   };
 
-  window.downloadAttachment = function (filename) {
+  window.downloadAttachment = function (filename, fileData) {
     showToast(`Downloading attachment: ${filename}`, "success");
+    const a = document.createElement("a");
+    if (fileData && fileData.startsWith("data:")) {
+      a.href = fileData;
+    } else {
+      const blob = new Blob([
+        `OFFICIAL ACADEMIC NOTICE ATTACHMENT\n` +
+        `Document: ${filename}\n` +
+        `Issued by: School of Computing & Information Technology, REVA University\n` +
+        `Timestamp: ${new Date().toLocaleString()}\n` +
+        `Status: Authenticated University Circular\n\n` +
+        `This document was officially distributed via the Reva Connect Academic Portal.`
+      ], { type: "text/plain" });
+      a.href = URL.createObjectURL(blob);
+    }
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // ==========================================================================
