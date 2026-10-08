@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reva Connect — Teacher-Student Academic Communication & Information Portal</title>
+  <meta name="description" content="A secure, real-time academic communication and information sharing portal connecting students and faculty. Built with HTML, CSS, JS, Supabase, and deployed on Vercel.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Urgent Broadcast Notice Ticker -->
+  <div id="urgentTicker" class="urgent-ticker">
+    <div class="ticker-content">
+      <span class="ticker-badge">Live Broadcast</span>
+      <span id="tickerText" class="ticker-text">
+        📢 Mid-Term Examination Schedule & Lab Guidelines for CS301 / CS304 announced.
+      </span>
+    </div>
+    <button id="tickerCloseBtn" class="ticker-close" title="Dismiss banner">✕</button>
+  </div>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      
+      <!-- Brand & Title -->
+      <div class="brand-section">
+        <div class="brand-logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c0 3 6 4 6 4s6-1 6-4v-5"/>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <div class="brand-name">
+            Reva Connect
+            <span class="brand-portal-tag">Portal</span>
+          </div>
+          <span class="brand-sub">Teacher-Student Academic Hub</span>
+        </div>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="nav-tabs" role="tablist">
+        <button id="tabDashboard" class="nav-tab-btn active" data-tab="dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard
+        </button>
+        <button id="tabAnnouncements" class="nav-tab-btn" data-tab="announcements">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
+          Announcements
+          <span class="tab-badge" id="annBadgeCount">4</span>
+        </button>
+        <button id="tabChat" class="nav-tab-btn" data-tab="chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          Live Chat
+        </button>
+        <button id="tabDoubts" class="nav-tab-btn" data-tab="doubts">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          Doubts Q&A
+        </button>
+        <button id="tabResources" class="nav-tab-btn" data-tab="resources">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          Resources
+        </button>
+        <button id="tabAssignments" class="nav-tab-btn" data-tab="assignments">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14h6"></path><path d="M9 18h6"></path></svg>
+          Assignments
+        </button>
+      </nav>
+
+      <!-- Right Header Actions -->
+      <div class="header-actions">
+        
+        <!-- Supabase Status & Setup Modal Button -->
+        <button id="supabaseStatusBtn" class="supabase-badge-btn demo-mode" title="Click to configure live Supabase database">
+          <span class="status-dot"></span>
+          <span id="supabaseStatusLabel">Demo Mode (Connect Supabase)</span>
+        </button>
+
+        <!-- Role Pill Switcher (Faculty vs Student) -->
+        <div class="role-pill-switcher" title="Switch active role to test permissions">
+          <button id="roleTeacherBtn" class="role-pill-btn active teacher" data-role="teacher">
+            🎓 Faculty
+          </button>
+          <button id="roleStudentBtn" class="role-pill-btn student" data-role="student">
+            🧑‍🎓 Student
+          </button>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="theme-btn" title="Toggle Dark/Light Mode">
+          <svg id="themeMoonIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+
+        <!-- User Profile Avatar -->
+        <div id="userProfileBtn" class="user-profile-badge" title="View Profile">
+          <img id="headerUserAvatar" class="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Avatar">
+          <div class="user-info-text">
+            <span id="headerUserName" class="user-name-label">Dr. Rajesh Sharma</span>
+            <span id="headerUserRole" class="user-role-label">Faculty</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- App Main Content Area -->
+  <main class="app-main">
+
+    <!-- ====================================================================
+         SECTION 1: DASHBOARD
+         ==================================================================== -->
+    <section id="sectionDashboard" class="portal-section active">
+      
+      <!-- Hero Banner Card -->
+      <div class="hero-banner-card">
+        <img class="hero-banner-bg" src="assets/images/hero-banner.jpg" alt="Academic Portal Banner">
+        <div class="hero-banner-overlay">
+          <div class="hero-text">
+            <h1 id="welcomeUserHeading">Welcome back, Dr. Rajesh Sharma</h1>
+            <p>
+              Your verified academic communication and information sharing hub. Coordinate courses, broadcast official notices, address student inquiries, and share reference material securely.
+            </p>
+            <div class="hero-badges-row">
+              <span class="hero-tag">🏛️ School of Computing</span>
+              <span class="hero-tag">⚡ Real-Time Channels</span>
+              <span class="hero-tag">🔒 Role-Secured Portal</span>
+              <span class="hero-tag">☁️ Vercel + Supabase Ready</span>
+            </div>
+          </div>
+          <div class="hero-cta-buttons">
+            <button id="dashboardActionPrimary" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span id="dashboardPrimaryBtnText">Post Announcement</span>
+            </button>
+            <button id="openChatQuickBtn" class="btn btn-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              Open Class Chat
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Metrics -->
+      <div class="stats-grid">
+        <div class="stat-card stat-cyan">
+          <div class="stat-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">4</span>
+            <span class="stat-label">Active Enrolled Courses</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-urgent">
+          <div class="stat-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+          </div>
+          <div class="stat-content">
+            <span id="statOpenDoubtsCount" class="stat-number">2</span>
+            <span class="stat-label">Unresolved Student Doubts</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-exam">
+          <div class="stat-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><mpath d="m3 11 18-5v12L3 14v-3z"></mpath><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
+          </div>
+          <div class="stat-content">
+            <span id="statAnnouncementsCount" class="stat-number">4</span>
+            <span class="stat-label">Active Announcements</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-success">
+          <div class="stat-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">3</span>
+            <span class="stat-label">Upcoming Assignments</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Two Column Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Left: Pinned & Recent Broadcasts -->
+        <div class="content-card">
+          <div class="card-header-flex">
+            <h2 class="card-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3z"></path></svg>
+              Recent Official Broadcasts
+            </h2>
+            <button class="btn btn-sm btn-secondary" onclick="document.getElementById('tabAnnouncements').click()">
+              View All
+            </button>
+          </div>
+          <div id="dashboardAnnouncementsList" class="announcements-list">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Right: Active Doubts & Office Hours Info -->
+        <div>
+          <div class="content-card">
+            <div class="card-header-flex">
+              <h2 class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Academic Queries
+              </h2>
+              <button class="btn btn-sm btn-secondary" onclick="document.getElementById('tabDoubts').click()">
+                Q&A Forum
+              </button>
+            </div>
+            <div id="dashboardDoubtsList" style="display:flex; flex-direction:column; gap:12px;">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h3 style="font-size:1rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+              🕒 Faculty Office Hours Schedule
+            </h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:12px;">
+              Students can book slots or join the live course channel during the designated office consultation hours:
+            </p>
+            <div style="background:var(--bg-surface-elevated); padding:12px; border-radius:var(--radius-md); font-size:0.82rem; border:1px solid var(--border-subtle);">
+              <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">Dr. Rajesh Sharma (DSA / Web Tech)</div>
+              <div style="color:var(--accent-secondary);">Mon & Thu: 3:00 PM – 5:00 PM (Room CS-304)</div>
+            </div>
+            <div style="background:var(--bg-surface-elevated); padding:12px; border-radius:var(--radius-md); font-size:0.82rem; border:1px solid var(--border-subtle); margin-top:8px;">
+              <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">Prof. Anita Roy (DBMS)</div>
+              <div style="color:var(--accent-secondary);">Tue & Fri: 2:00 PM – 4:00 PM (Room CS-208)</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 2: ANNOUNCEMENTS
+         ==================================================================== -->
+    <section id="sectionAnnouncements" class="portal-section">
+      <div class="filter-toolbar">
+        <div class="filter-chips" id="annFilterChips">
+          <button class="filter-chip active" data-filter="all">All Notices</button>
+          <button class="filter-chip" data-filter="urgent">Urgent Alerts</button>
+          <button class="filter-chip" data-filter="exam">Exams & Dates</button>
+          <button class="filter-chip" data-filter="assignment">Assignments</button>
+          <button class="filter-chip" data-filter="workshop">Workshops</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="annSearchInput" placeholder="Search announcements...">
+          </div>
+          <button id="openNewAnnModalBtn" class="btn btn-primary teacher-only">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            New Announcement
+          </button>
+        </div>
+      </div>
+
+      <div id="fullAnnouncementsList" class="announcements-list">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 3: LIVE ACADEMIC CHAT
+         ==================================================================== -->
+    <section id="sectionChat" class="portal-section">
+      <div class="chat-container-layout">
+        
+        <!-- Channels Sidebar -->
+        <aside class="chat-sidebar">
+          <div class="chat-sidebar-header">
+            <h3 style="font-size:1.05rem; display:flex; align-items:center; justify-content:space-between;">
+              Course Channels
+              <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">4 Active</span>
+            </h3>
+          </div>
+          <div id="chatChannelsList" class="chat-channels-list">
+            <!-- Rendered by JS -->
+          </div>
+        </aside>
+
+        <!-- Main Chat Stream -->
+        <main class="chat-main-area">
+          <div class="chat-active-header">
+            <div class="channel-info">
+              <h3 id="activeChannelTitle">#cs301-data-structures</h3>
+              <p id="activeChannelDescription">Official discussion channel for B-Trees, Graph algorithms, and weekly assignments.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="badge badge-course" id="activeChannelCode">CS301</span>
+            </div>
+          </div>
+
+          <div id="chatMessagesScroll" class="chat-messages-scroll">
+            <!-- Messages rendered by JS -->
+          </div>
+
+          <!-- Chat Input -->
+          <div class="chat-input-bar">
+            <select id="chatTagSelect" title="Select message tag">
+              <option value="general">💬 General</option>
+              <option value="doubt">❓ Doubt</option>
+              <option value="solution">💡 Solution</option>
+              <option value="official">📢 Official</option>
+              <option value="code">💻 Code</option>
+            </select>
+            <input type="text" id="chatMessageInput" placeholder="Type an academic query, solution, or announcement... (Press Enter to send)">
+            <button id="chatSendBtn" class="btn btn-primary" style="padding:10px 18px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </main>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 4: DOUBTS & Q&A FORUM
+         ==================================================================== -->
+    <section id="sectionDoubts" class="portal-section">
+      <div class="filter-toolbar">
+        <div class="filter-chips" id="doubtsFilterChips">
+          <button class="filter-chip active" data-filter="all">All Doubts</button>
+          <button class="filter-chip" data-filter="open">Unresolved</button>
+          <button class="filter-chip" data-filter="resolved">Teacher Verified</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="doubtsSearchInput" placeholder="Search academic doubts...">
+          </div>
+          <button id="openAskDoubtModalBtn" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>
+            Ask a Doubt
+          </button>
+        </div>
+      </div>
+
+      <div id="doubtsList" class="doubts-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 5: ACADEMIC RESOURCES
+         ==================================================================== -->
+    <section id="sectionResources" class="portal-section">
+      <div class="filter-toolbar">
+        <div class="filter-chips" id="resourcesFilterChips">
+          <button class="filter-chip active" data-filter="all">All Documents</button>
+          <button class="filter-chip" data-filter="Lecture Notes">Lecture Notes</button>
+          <button class="filter-chip" data-filter="Lab Manual">Lab Manuals</button>
+          <button class="filter-chip" data-filter="PYQ">PYQs (Past Papers)</button>
+          <button class="filter-chip" data-filter="Reference">Reference</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="resourcesSearchInput" placeholder="Search course files...">
+          </div>
+          <button id="openNewResourceModalBtn" class="btn btn-primary teacher-only">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Upload Resource
+          </button>
+        </div>
+      </div>
+
+      <div id="resourcesGrid" class="resources-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 6: ASSIGNMENTS & DEADLINES
+         ==================================================================== -->
+    <section id="sectionAssignments" class="portal-section">
+      <div class="filter-toolbar">
+        <div class="filter-chips">
+          <button class="filter-chip active">All Active Assignments</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button id="openNewAssignmentModalBtn" class="btn btn-primary teacher-only">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Create Assignment
+          </button>
+        </div>
+      </div>
+
+      <div id="assignmentsList" class="assignments-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       MODALS
+       ==================================================================== -->
+
+  <!-- 1. Supabase Connection & Configuration Modal -->
+  <div id="modalSupabaseConfig" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">
+          <span style="color:#10b981;">⚡</span> Supabase Backend Configuration
+        </h3>
+        <button class="icon-btn modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.88rem; color:var(--text-secondary);">
+          Connect Reva Connect directly to your cloud Supabase database project for live authentication, PostgreSQL tables, and Realtime communication.
+        </p>
+
+        <div class="form-group">
+          <label for="sbUrlInput">Project URL (e.g. https://your-project.supabase.co)</label>
+          <input type="url" id="sbUrlInput" placeholder="https://xyzcompany.supabase.co">
+        </div>
+
+        <div class="form-group">
+          <label for="sbKeyInput">Public Anon API Key</label>
+          <input type="text" id="sbKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <div style="background:var(--bg-surface); padding:14px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); font-size:0.82rem;">
+          <div style="font-weight:700; margin-bottom:6px; color:var(--accent-secondary);">📌 Supabase Setup Guide:</div>
+          <ol style="padding-left:18px; color:var(--text-secondary); display:flex; flex-direction:column; gap:4px;">
+            <li>Create a project on <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a></li>
+            <li>In Supabase Dashboard, open <strong>SQL Editor</strong></li>
+            <li>Run the included <strong style="color:var(--text-primary);">supabase-schema.sql</strong> file</li>
+            <li>Copy your Project URL and Anon Key from <strong>Settings &rarr; API</strong></li>
+          </ol>
+        </div>
+
+        <div id="sbTestResultBox" style="display:none; padding:10px 14px; border-radius:var(--radius-md); font-size:0.82rem;"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="sbResetDemoBtn" class="btn btn-secondary">Use Interactive Demo Data</button>
+        <button id="sbSaveBtn" class="btn btn-primary">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. New Announcement Modal -->
+  <div id="modalNewAnnouncement" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Broadcast New Announcement</h3>
+        <button class="icon-btn modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="annTitleInput">Announcement Title *</label>
+          <input type="text" id="annTitleInput" placeholder="e.g. CS301 Extra Class & Lab Evaluation Notice" required>
+        </div>
+        <div class="form-group">
+          <label for="annCourseSelect">Target Course / Scope *</label>
+          <select id="annCourseSelect">
+            <option value="CS301">CS301 - Data Structures & Algorithms</option>
+            <option value="CS304">CS304 - Database Management Systems</option>
+            <option value="CS308">CS308 - Web Technologies</option>
+            <option value="All Courses">All Courses (Campus-wide)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="annCategorySelect">Category *</label>
+          <select id="annCategorySelect">
+            <option value="general">General Notice</option>
+            <option value="urgent">Urgent Alert</option>
+            <option value="exam">Exam / Schedule</option>
+            <option value="assignment">Assignment</option>
+            <option value="workshop">Workshop / Seminar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="annContentInput">Details & Instructions *</label>
+          <textarea id="annContentInput" rows="4" placeholder="Write full announcement details..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="annAttachmentInput">Attachment File Name (Optional)</label>
+          <input type="text" id="annAttachmentInput" placeholder="e.g. Schedule_Review_2026.pdf">
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="annIsPinnedInput" style="width:auto;">
+          <label for="annIsPinnedInput" style="font-size:0.85rem; cursor:pointer;">Pin to top of portal</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close-btn">Cancel</button>
+        <button id="annSubmitBtn" class="btn btn-primary">Publish Announcement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Ask a Doubt Modal -->
+  <div id="modalAskDoubt" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Ask an Academic Doubt</h3>
+        <button class="icon-btn modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="doubtTitleInput">Question Title *</label>
+          <input type="text" id="doubtTitleInput" placeholder="e.g. Why is Dijkstra's algorithm greedy rather than dynamic programming?" required>
+        </div>
+        <div class="form-group">
+          <label for="doubtCourseSelect">Subject / Course *</label>
+          <select id="doubtCourseSelect">
+            <option value="CS301">CS301 - Data Structures</option>
+            <option value="CS304">CS304 - Database Systems</option>
+            <option value="CS308">CS308 - Web Technologies</option>
+            <option value="General">General Academic</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="doubtDescInput">Explain your inquiry or where you got stuck *</label>
+          <textarea id="doubtDescInput" rows="4" placeholder="Provide background on the problem..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="doubtCodeInput">Code Snippet or Query (Optional)</label>
+          <textarea id="doubtCodeInput" rows="3" style="font-family:var(--font-mono); font-size:0.82rem;" placeholder="Paste relevant code here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close-btn">Cancel</button>
+        <button id="doubtSubmitBtn" class="btn btn-primary">Post Doubt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Upload Resource Modal -->
+  <div id="modalNewResource" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Upload Course Academic Resource</h3>
+        <button class="icon-btn modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="resTitleInput">Document Title *</label>
+          <input type="text" id="resTitleInput" placeholder="e.g. Module 3: Dynamic Programming Lecture Notes" required>
+        </div>
+        <div class="form-group">
+          <label for="resCourseSelect">Course *</label>
+          <select id="resCourseSelect">
+            <option value="CS301">CS301 - Data Structures</option>
+            <option value="CS304">CS304 - Database Systems</option>
+            <option value="CS308">CS308 - Web Technologies</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="resCategorySelect">Category *</label>
+          <select id="resCategorySelect">
+            <option value="Lecture Notes">Lecture Notes</option>
+            <option value="Lab Manual">Lab Manual</option>
+            <option value="PYQ">PYQ (Past Year Question Paper)</option>
+            <option value="Reference">Reference / Boilerplate</option>
+            <option value="Syllabus">Syllabus</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="resDescInput">Description</label>
+          <textarea id="resDescInput" rows="2" placeholder="Summary of topics covered..."></textarea>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label for="resFileTypeInput">File Type</label>
+            <select id="resFileTypeInput">
+              <option value="PDF">PDF</option>
+              <option value="ZIP">ZIP</option>
+              <option value="PPTX">PPTX</option>
+              <option value="DOCX">DOCX</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="resFileSizeInput">File Size</label>
+            <input type="text" id="resFileSizeInput" value="3.5 MB">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close-btn">Cancel</button>
+        <button id="resSubmitBtn" class="btn btn-primary">Publish Resource</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Submit Assignment Modal -->
+  <div id="modalSubmitAssignment" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Submit Academic Assignment</h3>
+        <button class="icon-btn modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4 id="submitAsgTitle" style="color:var(--text-primary); margin-bottom:8px;"></h4>
+        <input type="hidden" id="submitAsgId">
+        <div class="form-group">
+          <label for="subCommentInput">Submission Comments / Notes</label>
+          <textarea id="subCommentInput" rows="3" placeholder="Explain your implementation or write repository URL..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="subFileNameInput">File / Source Code Name</label>
+          <input type="text" id="subFileNameInput" placeholder="e.g. student_solution.zip or main.cpp" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close-btn">Cancel</button>
+        <button id="subSubmitBtn" class="btn btn-primary">Upload & Submit Work</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. User Profile Modal -->
+  <div id="modalUserProfile" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Academic Identity Profile</h3>
+        <button class="icon-btn modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <img id="profileModalAvatar" style="width:80px; height:80px; border-radius:50%; margin:0 auto 12px; border:3px solid var(--accent-primary); object-fit:cover;" src="" alt="Profile">
+        <h3 id="profileModalName" style="font-size:1.3rem;"></h3>
+        <p id="profileModalRole" style="font-size:0.85rem; color:var(--accent-secondary); text-transform:uppercase; font-weight:700; margin-bottom:16px;"></p>
+        
+        <div style="background:var(--bg-surface); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); text-align:left; font-size:0.85rem; display:flex; flex-direction:column; gap:8px;">
+          <div><strong>Email:</strong> <span id="profileModalEmail" style="color:var(--text-secondary);"></span></div>
+          <div><strong>Department:</strong> <span id="profileModalDept" style="color:var(--text-secondary);"></span></div>
+          <div><strong>Roll / Faculty ID:</strong> <span id="profileModalId" style="color:var(--text-secondary);"></span></div>
+          <div><strong>Office Hours / Schedule:</strong> <span id="profileModalHours" style="color:var(--text-secondary);"></span></div>
+          <div><strong>Academic Bio:</strong> <span id="profileModalBio" style="color:var(--text-secondary);"></span></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary modal-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Supabase JS Client & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
