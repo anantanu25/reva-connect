@@ -394,11 +394,19 @@
          ==================================================================== -->
     <section id="sectionAssignments" class="portal-section">
       <div class="filter-toolbar">
-        <div class="filter-chips">
-          <button class="filter-chip active">All Active Assignments</button>
+        <div class="filter-chips" id="asgFilterChips">
+          <button class="filter-chip active" data-filter="all">All Assignments</button>
+          <button class="filter-chip" data-filter="urgent">⏰ Due Soon</button>
+          <button class="filter-chip" data-filter="cs301">CS301</button>
+          <button class="filter-chip" data-filter="cs304">CS304</button>
+          <button class="filter-chip" data-filter="cs308">CS308</button>
         </div>
 
         <div style="display:flex; align-items:center; gap:12px;">
+          <div class="search-input-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="asgSearchInput" placeholder="Search assignments...">
+          </div>
           <button id="openNewAssignmentModalBtn" class="btn btn-primary teacher-only">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Create Assignment
@@ -631,7 +639,50 @@
     </div>
   </div>
 
-  <!-- 6. User Profile Modal -->
+  <!-- 6. Create Assignment Modal -->
+  <div id="modalNewAssignment" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Create New Course Assignment</h3>
+        <button class="icon-btn modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="asgTitleInput">Assignment Title</label>
+          <input type="text" id="asgTitleInput" placeholder="e.g. Lab 4: Binary Search Trees & AVL Balancing" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="asgCourseSelect">Target Course</label>
+            <select id="asgCourseSelect">
+              <option value="CS301">CS301 — Data Structures & Algorithms</option>
+              <option value="CS304">CS304 — Database Systems</option>
+              <option value="CS308">CS308 — Web Technologies</option>
+              <option value="ALL">All Enrolled Courses</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="asgTotalPointsInput">Total Points</label>
+            <input type="number" id="asgTotalPointsInput" value="100" min="10" max="100">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="asgDueDateInput">Submission Deadline (Date & Time)</label>
+          <input type="datetime-local" id="asgDueDateInput" required>
+        </div>
+        <div class="form-group">
+          <label for="asgDescInput">Instructions & Problem Statement</label>
+          <textarea id="asgDescInput" rows="4" placeholder="Detail the problem statement, submission format, test criteria..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close-btn">Cancel</button>
+        <button id="asgSubmitBtn" class="btn btn-primary">Publish Assignment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. User Profile Modal -->
   <div id="modalUserProfile" class="modal-backdrop">
     <div class="modal-dialog">
       <div class="modal-header">

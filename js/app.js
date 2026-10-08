@@ -12,6 +12,7 @@
   let annFilter = "all";
   let doubtsFilter = "all";
   let resFilter = "all";
+  let asgFilter = "all";
 
   // --- DOM ELEMENTS CACHE ---
   const elements = {
@@ -72,12 +73,15 @@
     // Assignments
     assignmentsList: document.getElementById("assignmentsList"),
     openNewAssignmentModalBtn: document.getElementById("openNewAssignmentModalBtn"),
+    asgFilterChips: document.getElementById("asgFilterChips"),
+    asgSearchInput: document.getElementById("asgSearchInput"),
 
     // Modals
     modalSupabaseConfig: document.getElementById("modalSupabaseConfig"),
     modalNewAnnouncement: document.getElementById("modalNewAnnouncement"),
     modalAskDoubt: document.getElementById("modalAskDoubt"),
     modalNewResource: document.getElementById("modalNewResource"),
+    modalNewAssignment: document.getElementById("modalNewAssignment"),
     modalSubmitAssignment: document.getElementById("modalSubmitAssignment"),
     modalUserProfile: document.getElementById("modalUserProfile"),
 
@@ -92,6 +96,7 @@
     annSubmitBtn: document.getElementById("annSubmitBtn"),
     doubtSubmitBtn: document.getElementById("doubtSubmitBtn"),
     resSubmitBtn: document.getElementById("resSubmitBtn"),
+    asgSubmitBtn: document.getElementById("asgSubmitBtn"),
     subSubmitBtn: document.getElementById("subSubmitBtn"),
 
     // Toast container
@@ -340,11 +345,23 @@
     if (elements.openNewResourceModalBtn) {
       elements.openNewResourceModalBtn.addEventListener("click", () => openModal(elements.modalNewResource));
     }
+    if (elements.openNewAssignmentModalBtn) {
+      elements.openNewAssignmentModalBtn.addEventListener("click", () => {
+        const defaultDue = new Date(Date.now() + 86400000 * 5);
+        defaultDue.setMinutes(defaultDue.getMinutes() - defaultDue.getTimezoneOffset());
+        const dateInput = document.getElementById("asgDueDateInput");
+        if (dateInput) dateInput.value = defaultDue.toISOString().slice(0, 16);
+        openModal(elements.modalNewAssignment);
+      });
+    }
 
     // Modal submit forms
     elements.annSubmitBtn.addEventListener("click", handleCreateAnnouncement);
     elements.doubtSubmitBtn.addEventListener("click", handleCreateDoubt);
     elements.resSubmitBtn.addEventListener("click", handleCreateResource);
+    if (elements.asgSubmitBtn) {
+      elements.asgSubmitBtn.addEventListener("click", handleCreateAssignment);
+    }
     elements.subSubmitBtn.addEventListener("click", handleSubmitAssignment);
 
     // Announcements filters & search
@@ -390,6 +407,21 @@
     }
     if (elements.resourcesSearchInput) {
       elements.resourcesSearchInput.addEventListener("input", renderResources);
+    }
+
+    // Assignments filters & search
+    if (elements.asgFilterChips) {
+      elements.asgFilterChips.querySelectorAll(".filter-chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          elements.asgFilterChips.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+          asgFilter = chip.dataset.filter;
+          renderAssignments();
+        });
+      });
+    }
+    if (elements.asgSearchInput) {
+      elements.asgSearchInput.addEventListener("input", renderAssignments);
     }
 
     // Chat send button & Enter key
@@ -803,6 +835,13 @@
               ` : ''}
               <div class="reply-author">${escapeHTML(r.author_name)} <span style="font-size:0.7rem; color:var(--text-muted);">(${escapeHTML(r.author_role)})</span></div>
               <div class="reply-content">${escapeHTML(r.content)}</div>
+              ${(currentRole === 'teacher' && !r.is_verified_by_teacher) ? `
+                <div style="margin-top:6px;">
+                  <button class="btn btn-sm btn-secondary" style="font-size:0.72rem; padding:2px 8px;" onclick="window.verifyDoubtReply('${d.id}', '${r.id}')">
+                    ✓ Verify as Faculty Solution
+                  </button>
+                </div>
+              ` : ''}
             </div>
           `).join("") : '<div style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">No replies yet. Be the first to answer!</div>'}
         </div>
@@ -873,6 +912,13 @@
 
     showToast(currentRole === "teacher" ? "Faculty solution posted and verified!" : "Reply submitted!", "success");
     renderDoubts();
+  };
+
+  window.verifyDoubtReply = async function (doubtId, replyId) {
+    await window.supabaseManager.verifyDoubtReply(doubtId, replyId);
+    showToast("Solution verified with official Faculty seal!", "success");
+    renderDoubts();
+    renderDashboard();
   };
 
   window.upvoteDoubt = async function (doubtId) {
@@ -1000,11 +1046,28 @@
   // SECTION 6: ASSIGNMENTS & DEADLINES
   // ==========================================================================
   async function renderAssignments() {
-    const assignments = await window.supabaseManager.getAssignments();
+    let assignments = await window.supabaseManager.getAssignments();
+
+    // Filter by chip
+    if (asgFilter === "urgent") {
+      assignments = assignments.filter(a => new Date(a.due_date) - new Date() < 86400000 * 3);
+    } else if (asgFilter !== "all") {
+      assignments = assignments.filter(a => (a.course_code || "").toLowerCase() === asgFilter.toLowerCase());
+    }
+
+    // Filter by query
+    const query = elements.asgSearchInput ? elements.asgSearchInput.value.toLowerCase().trim() : "";
+    if (query) {
+      assignments = assignments.filter(a =>
+        a.title.toLowerCase().includes(query) ||
+        a.description.toLowerCase().includes(query) ||
+        (a.course_code && a.course_code.toLowerCase().includes(query))
+      );
+    }
 
     if (assignments.length === 0) {
       elements.assignmentsList.innerHTML = `
-        <div style="text-align:center; padding:48px; color:var(--text-muted); background:var(--bg-surface); border-radius:var(--radius-lg); border:1px solid var(--border-subtle);">
+        <div style="text-align:center; padding:48px; color:var(--text-muted); background:var(--bg-surface); border-radius:var(--radius-lg); border:1px solid var(--border-subtle); grid-column:1/-1;">
           <div style="font-size:2rem; margin-bottom:8px;">📝</div>
           <div style="font-weight:600;">No assignments currently scheduled.</div>
         </div>
@@ -1079,6 +1142,39 @@
         </div>
       `;
     }).join("");
+  }
+
+  async function handleCreateAssignment() {
+    const title = document.getElementById("asgTitleInput").value.trim();
+    const course = document.getElementById("asgCourseSelect").value;
+    const points = parseInt(document.getElementById("asgTotalPointsInput").value) || 100;
+    const dueDateVal = document.getElementById("asgDueDateInput").value;
+    const desc = document.getElementById("asgDescInput").value.trim();
+
+    if (!title || !dueDateVal || !desc) {
+      showToast("Please provide title, submission deadline, and problem statement.", "error");
+      return;
+    }
+
+    if (elements.asgSubmitBtn) elements.asgSubmitBtn.disabled = true;
+
+    await window.supabaseManager.createAssignment({
+      title,
+      course_code: course,
+      total_points: points,
+      due_date: new Date(dueDateVal).toISOString(),
+      description: desc,
+      created_by: currentUser.name
+    });
+
+    if (elements.asgSubmitBtn) elements.asgSubmitBtn.disabled = false;
+    closeModal(elements.modalNewAssignment);
+
+    document.getElementById("asgTitleInput").value = "";
+    document.getElementById("asgDescInput").value = "";
+
+    showToast("Course assignment published successfully!", "success");
+    renderAssignments();
   }
 
   window.openSubmitModal = function (asgId, title) {

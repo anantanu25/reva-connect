@@ -336,6 +336,21 @@
       return null;
     }
 
+    async verifyDoubtReply(doubtId, replyId) {
+      const db = this.getLocalDB();
+      const doubt = (db.doubts || []).find(d => d.id === doubtId);
+      if (doubt && doubt.replies) {
+        const rep = doubt.replies.find(r => r.id === replyId);
+        if (rep) {
+          rep.is_verified_by_teacher = true;
+          doubt.status = "resolved";
+          this.saveLocalDB(db);
+          return rep;
+        }
+      }
+      return null;
+    }
+
     async upvoteDoubt(doubtId) {
       const db = this.getLocalDB();
       const doubt = (db.doubts || []).find(d => d.id === doubtId);
@@ -390,11 +405,75 @@
 
     // --- ASSIGNMENTS & SUBMISSIONS ---
     async getAssignments() {
+      if (this.isConnected && this.client) {
+        try {
+          const { data, error } = await this.client
+            .from('assignments')
+            .select('*, submissions(*)')
+            .order('created_at', { ascending: false });
+          if (!error && data && data.length > 0) return data;
+        } catch (e) {
+          console.warn("Supabase assignments error, using local:", e);
+        }
+      }
       const db = this.getLocalDB();
       return db.assignments || [];
     }
 
+    async createAssignment(assignment) {
+      if (this.isConnected && this.client) {
+        try {
+          const { data, error } = await this.client
+            .from('assignments')
+            .insert([{
+              title: assignment.title,
+              course_code: assignment.course_code,
+              description: assignment.description,
+              due_date: assignment.due_date,
+              total_points: assignment.total_points || 100,
+              created_by: assignment.created_by
+            }])
+            .select();
+          if (!error && data && data[0]) {
+            data[0].submissions = [];
+            return data[0];
+          }
+        } catch (e) {
+          console.warn("Supabase createAssignment error, using local:", e);
+        }
+      }
+      const db = this.getLocalDB();
+      const newAsg = {
+        id: "asg_" + Date.now(),
+        submissions: [],
+        created_at: new Date().toISOString(),
+        total_points: 100,
+        ...assignment
+      };
+      db.assignments = [newAsg, ...(db.assignments || [])];
+      this.saveLocalDB(db);
+      return newAsg;
+    }
+
     async submitAssignment(assignmentId, submission) {
+      if (this.isConnected && this.client) {
+        try {
+          const { data, error } = await this.client
+            .from('submissions')
+            .insert([{
+              assignment_id: assignmentId,
+              student_id: submission.student_id,
+              student_name: submission.student_name,
+              submission_text: submission.submission_text,
+              file_name: submission.file_name,
+              status: 'Submitted'
+            }])
+            .select();
+          if (!error && data && data[0]) return data[0];
+        } catch (e) {
+          console.warn("Supabase submitAssignment error, using local:", e);
+        }
+      }
       const db = this.getLocalDB();
       const asg = (db.assignments || []).find(a => a.id === assignmentId);
       if (asg) {
@@ -420,6 +499,18 @@
     }
 
     async gradeSubmission(assignmentId, submissionId, grade) {
+      if (this.isConnected && this.client) {
+        try {
+          const { data, error } = await this.client
+            .from('submissions')
+            .update({ grade: grade, status: 'Graded' })
+            .eq('id', submissionId)
+            .select();
+          if (!error && data && data[0]) return data[0];
+        } catch (e) {
+          console.warn("Supabase gradeSubmission error, using local:", e);
+        }
+      }
       const db = this.getLocalDB();
       const asg = (db.assignments || []).find(a => a.id === assignmentId);
       if (asg && asg.submissions) {
